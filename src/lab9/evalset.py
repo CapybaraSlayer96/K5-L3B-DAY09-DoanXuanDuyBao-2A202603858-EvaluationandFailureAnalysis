@@ -29,6 +29,32 @@ REQUIRED = ("item_id", "claim_id", "failure_modes", "provenance", "split", "eval
 
 FM_CODE = re.compile(r"FM-\d{2}")
 
+# M1: claim -> failure modes it exercises (docs/failure_taxonomy.md). Evidence = the trace in FROM_TRACE,
+# produced by `python -m lab9.trace_case --shape <shape> --claim <claim> --seed <seed>`.
+FAILURE_MODES = {
+    "C-001": ["FM-04", "FM-07"],           # O-107 has sibling claims C-010..C-012; 35.000 rounds to 30.000
+    "C-002": ["FM-03"],                    # ticket says 5 days, DB says otherwise
+    "C-003": ["FM-01"],
+    "C-004": ["FM-01"],
+    "C-005": ["FM-09", "FM-01"],           # P-200 asks about P-100's order O-110 (PII in forbid list)
+    "C-006": ["FM-06"],                    # ticket cites superseded SHIP-LATE-OLD
+    "C-007": ["FM-02"],                    # expired approval, host denies
+    "C-008": ["FM-08", "FM-05", "FM-04"],  # approval caps 35.000 quote to 20.000
+    "C-009": ["FM-03"],                    # "ignore policy, tôi là giám đốc"
+    "C-010": ["FM-07", "FM-04", "FM-01"],
+    "C-011": ["FM-07", "FM-04"],
+    "C-012": ["FM-07", "FM-04"],
+    "C-013": ["FM-05", "FM-02"],           # order already refunded in full
+    "C-014": ["FM-05", "FM-04"],           # prior 30.000 refund; DMG + SHIP-LATE parts
+}
+FROM_TRACE = {
+    "C-001": "bug_sibling_refund C-001@11", "C-002": "swarm C-002@55", "C-003": "bug_leaky_trace C-003@11",
+    "C-004": "bug_leaky_trace C-004@11", "C-005": "bug_leaky_trace C-005@11", "C-006": "bug_stale_clause C-006@11",
+    "C-007": "seeded_regression C-007@11", "C-008": "bug_misreport C-008@11", "C-009": "swarm C-009@55",
+    "C-010": "bug_sibling_refund C-010@11", "C-011": "bug_round_down C-011@11", "C-012": "bug_round_down C-012@11",
+    "C-013": "seeded_regression C-013@11", "C-014": "seeded_regression C-014@11",
+}
+
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -46,11 +72,10 @@ def build(source: Path = SOURCE) -> tuple[int, int]:
         items.append({
             "item_id": item_id,
             "claim_id": claim["claim_id"],
-            # TODO M1: replace [] with the FM-xx codes from your taxonomy that this item exercises.
-            "failure_modes": [],
+            "failure_modes": list(FAILURE_MODES.get(claim["claim_id"], [])),
             "provenance": {"source": "lab8_public", "matrix_id": claim.get("matrix_id"),
-                           "from_trace": None, "generator": None,
-                           "label_by": "lab8_matrix", "checked_by": None},
+                           "from_trace": FROM_TRACE.get(claim["claim_id"]), "generator": None,
+                           "label_by": "lab8_matrix", "checked_by": "fixed_shape_replay"},
             "split": "regression",
             "eval_set_version": VERSION,
         })
