@@ -28,7 +28,7 @@ Output lệnh trên (rút gọn):
 
 | Trường | Nội dung |
 |---|---|
-| Trial | `seeded_regression C-002@11`, report `E-seeded_regression-20261118-4d40` (dòng E-002, cả 5 seed đều fail) |
+| Trial | `seeded_regression C-002@11`, report `E-seeded_regression-20261118-6810` (dòng E-002, cả 5 seed đều fail) |
 | Triệu chứng | `pass_rate`, `refund_amount_correct`, `db_fact_kept` fail. Reply nói "đã hoàn 20.000đ", ledger cũng ghi 20.000 nên `reply_matches_ledger` không bắt; nhãn là denied / 0đ. Reply khớp ledger nhưng cả hai đều sai so với chính sách. |
 | Bước sai đầu tiên | event 3 `model_override {"delay_days": 5}` |
 | Vì sao là bước *đầu tiên* | event 1 handoff đúng hợp đồng (`facts` rỗng, chỉ có tool read-only). event 2 investigator đọc từ DB `delay_days` = 2, và với 2 ngày trễ đơn O-202 không đủ điều kiện. Từ event 3 trở đi mọi bước đều dùng con số đã bị đè: quote ở event 4 tính lại thành 20.000 rồi host ghi tiền. |

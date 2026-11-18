@@ -2,8 +2,8 @@
 
 Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi số dưới đây chép từ report do script sinh ra (`src/reports/*.json`), không gõ tay.
 
-- **Run ID / eval set SHA:** baseline v1 `E-swarm-20261118-4d40` · eval set v1 `4d40b038feef`; baseline v2 `E-swarm-20261118-da51` · eval set v2 `da51104a278e`
-- **Phiên bản:** code: Day 8 gốc (`VinUni-AI20k/K5-Day8-From-Workflows-to-Agents` @ `034c6c4`, không sửa `src/lab8/`) + `src/lab9` trên nhánh `starter/d09` · eval set v1 (sha `4d40b038feef`) · metric_spec `1.0` (`config/metric_spec.yaml`) · grader `lab9.graders.GRADERS` (cùng commit) · seeds 11/22/33/44/55 · Python 3.12 local, 3.13 trong CI · MockLLM
+- **Run ID / eval set SHA:** baseline v1 `E-swarm-20261118-6810` · eval set v1 `681079328bcb`; baseline v2 `E-swarm-20261118-cb53` · eval set v2 `cb535a2c851d`
+- **Phiên bản:** code: Day 8 gốc (`VinUni-AI20k/K5-Day8-From-Workflows-to-Agents` @ `034c6c4`, không sửa `src/lab8/`) + `src/lab9` trên nhánh `starter/d09` · eval set v1 (sha `681079328bcb`) · metric_spec `1.0` (`config/metric_spec.yaml`) · grader `lab9.graders.GRADERS` (cùng commit) · seeds 11/22/33/44/55 · Python 3.12 local, 3.13 trong CI · MockLLM
 - **Eval set:** v1, 14 item × 5 seed = 70 trial, nguồn `lab8_public` (T01–T14), nhãn ở `labels_v1.json` (tách khỏi item). Mỗi item có `failure_modes`, `provenance.from_trace`, `checked_by: fixed_shape_replay`.
 - **Metric & ngưỡng (v1):**
 
@@ -22,9 +22,9 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi s�
 
 | Report | run ID | pass_rate | refund_amount_correct | reply_matches_ledger | db_fact_kept | pass_5 | Gate |
 |---|---|---|---|---|---|---|---|
-| baseline `swarm` | E-swarm-20261118-4d40 | 0.9857 | 0.9857 | 1.0 | 0.9857 | 0.9286 | — |
-| `fixed` | E-fixed-20261118-4d40 | 1.0 (Δ +0.014 CI [+0.000, +0.043]) | 1.0 | 1.0 | 1.0 | 1.0 | **exit 0 — merge** |
-| `seeded_regression` | E-seeded_regression-20261118-4d40 | 0.7143 (Δ −0.271 CI [−0.500, −0.057]) | 0.8571 (Δ −0.129 CI [−0.315, +0.000]) | 0.7857 (Δ −0.214 CI [−0.429, +0.000]) | 0.9286 | 0.7143 | **exit 1 — blocked: refund_amount_correct, pass_rate, reply_matches_ledger** |
+| baseline `swarm` | E-swarm-20261118-6810 | 0.9857 | 0.9857 | 1.0 | 0.9857 | 0.9286 | — |
+| `fixed` | E-fixed-20261118-6810 | 1.0 (Δ +0.014 CI [+0.000, +0.043]) | 1.0 | 1.0 | 1.0 | 1.0 | **exit 0 — merge** |
+| `seeded_regression` | E-seeded_regression-20261118-6810 | 0.7143 (Δ −0.271 CI [−0.500, −0.057]) | 0.8571 (Δ −0.129 CI [−0.315, +0.000]) | 0.7857 (Δ −0.214 CI [−0.429, +0.000]) | 0.9286 | 0.7143 | **exit 1 — blocked: refund_amount_correct, pass_rate, reply_matches_ledger** |
 
   CI = paired bootstrap 95% (scipy, percentile, 1000 resample, rng 2027) trên trung bình theo item. `pass_rate` khớp số tham chiếu trong CHECKPOINTS (Δ −0.271, CI [−0.500, −0.057]).
   Graders (M3, `python -m lab9.mutation --detect`): phát hiện 100% (20/20) dòng `seeded_regression` fail `pass_rate` qua ít nhất một grader khác, báo nhầm 0% trên `fixed`.

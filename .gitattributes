@@ -1,0 +1,3 @@
+# eval_set_sha hashes raw bytes: keep eval data LF on every OS so local and CI shas match.
+src/data/**/*.jsonl text eol=lf
+src/data/**/*.json text eol=lf

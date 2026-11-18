@@ -23,7 +23,7 @@ Quy tắc: mỗi FM phải quan sát được trên trace, không phải phỏng
 
 | # | Trial | FM | Bước sai đầu tiên | Vì sao là bước đầu tiên |
 |---|---|---|---|---|
-| A1 | `swarm C-002@55` (baseline `E-swarm-20261118-4d40`) | FM-03 | event 3 `model_override {"delay_days": 5}` | event 1 handoff và event 2 investigator đọc đúng `delay_days` = 2 từ DB; quote ở event 4 sai vì dùng số đã bị đè |
+| A1 | `swarm C-002@55` (baseline `E-swarm-20261118-6810`) | FM-03 | event 3 `model_override {"delay_days": 5}` | event 1 handoff và event 2 investigator đọc đúng `delay_days` = 2 từ DB; quote ở event 4 sai vì dùng số đã bị đè |
 | A2 | `seeded_regression C-007@11` | FM-02 | event 5 `reply "đã hoàn 35.000đ"` sau khi host từ chối (approval A-007 hết hạn) | event 3 quote 35.000 đúng; host ghi `policy_denied`; agent báo resolved |
 | A3 | `seeded_regression C-014@11` | FM-05 | event 5 `proposal {"amount_vnd": 120000}` (tự trừ 30.000 đã hoàn) | event 3 quote 150.000 đúng; host trừ prior refund thêm lần nữa nên ledger còn 90.000 |
 | A4 | `seeded_regression C-013@11` | FM-05 | event 5 `proposal {"amount_vnd": 0}`, agent tự từ chối, không gọi host | status denied trùng nhãn, nhưng nhãn cần `policy_denied` từ host; `host_policy_decision` = False |
@@ -33,7 +33,7 @@ Bổ sung (không phải anchor): `bug_sum_parts C-014@11` FM-04 event 4; `bug_s
 
 ## Gắn `failure_modes` cho eval set v1
 
-Bảng `FAILURE_MODES` và `FROM_TRACE` nằm trong `src/lab9/evalset.py`, nên `--build` sinh lại đúng nhãn. `checked_by: fixed_shape_replay` nghĩa là cả 14 item × 5 seed qua hết grader trên shape `fixed` (report `E-fixed-20261118-4d40`).
+Bảng `FAILURE_MODES` và `FROM_TRACE` nằm trong `src/lab9/evalset.py`, nên `--build` sinh lại đúng nhãn. `checked_by: fixed_shape_replay` nghĩa là cả 14 item × 5 seed qua hết grader trên shape `fixed` (report `E-fixed-20261118-6810`).
 
 | Item | Claim | FM | Lý do |
 |---|---|---|---|
