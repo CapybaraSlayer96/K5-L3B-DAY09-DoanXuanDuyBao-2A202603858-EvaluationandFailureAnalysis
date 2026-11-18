@@ -64,7 +64,9 @@ def integrity_check(pr: dict, base: dict, spec: dict, base_spec: dict | None = N
         problems.append(f"{len(bad)} row value(s) missing or not a bool (crashed grader?), first {bad[0]}")
     problems += _metrics_match_rows(pr, spec, graded)
     problems += _slice_tags_match(rows, base_rows)
-    if base_spec is not None and base_spec.get("eval_set_version") == spec.get("eval_set_version"):
+    if base_spec is not None and (base_spec.get("eval_set_version") == spec.get("eval_set_version")
+                                  or base_spec.get("eval_set") == spec.get("eval_set")
+                                  or base_spec.get("eval_set") == man.get("eval_set")):
         problems += ratchet(spec, base_spec)
     return problems
 
@@ -107,7 +109,8 @@ def _slice_tags_match(rows: list[dict], base_rows: list[dict]) -> list[str]:
 def ratchet(spec: dict, base_spec: dict) -> list[str]:
     """Same eval-set version: thresholds may only get stricter, nothing blocking may disappear."""
     out: list[str] = []
-    for field, key in (("metrics", lambda m: m["id"]), ("slices", lambda x: (x["name"], x["metric"]))):
+    for field, key in (("metrics", lambda m: m["id"]), ("slices", lambda x: (x["name"], x["metric"])),
+                       ("row_regression", lambda x: x["metric"])):
         now = {key(x): x for x in spec.get(field) or []}
         for k, old in {key(x): x for x in base_spec.get(field) or []}.items():
             new = now.get(k)
@@ -117,7 +120,7 @@ def ratchet(spec: dict, base_spec: dict) -> list[str]:
             if old.get("blocking") and not new.get("blocking"):
                 out.append(f"ratchet: {field} {k} no longer blocking")
             oth, nth = (old.get("threshold", {}), new.get("threshold", {})) if field == "metrics" else (old, new)
-            for t in ("max", "max_increase"):
+            for t in ("max", "max_increase", "max_new_failures"):
                 if t in oth and (t not in nth or nth[t] > oth[t]):
                     out.append(f"ratchet: {field} {k} {t} {oth[t]} -> {nth.get(t)}")
             if "min" in oth and ("min" not in nth or nth["min"] < oth["min"]):
@@ -146,7 +149,8 @@ def slice_check(pr: dict, base: dict, spec: dict) -> tuple[list[str], list[str]]
         keys = sorted(set(a) & set(b))
         if sl.get("no_significant_drop") and keys:
             d, lo, hi = stats.paired_bootstrap([a[k] for k in keys], [b[k] for k in keys],
-                                               n_resamples=bs.get("n_resamples", 1000), rng=bs.get("rng", 2027))
+                                               n_resamples=bs.get("n_resamples", 1000), rng=bs.get("rng", 2027),
+                                               confidence=bs.get("confidence", 0.95))
             note = f"Δ {d:+.3f} CI [{lo:+.3f}, {hi:+.3f}] n={len(keys)}"
             if hi < 0:
                 verdict = "fail"
@@ -159,7 +163,7 @@ def slice_check(pr: dict, base: dict, spec: dict) -> tuple[list[str], list[str]]
 
 
 def check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> tuple[list[str], list[str]]:
-    if pr["manifest"]["eval_set_sha"] != base["manifest"]["eval_set_sha"]:
+    if (pr.get("manifest") or {}).get("eval_set_sha") != (base.get("manifest") or {}).get("eval_set_sha"):
         return ["eval_set_sha"], ["  EVAL SET differs from the baseline's: re-run the baseline on the same eval set"]
     problems = integrity_check(pr, base, spec, base_spec)
     if problems:
@@ -182,7 +186,8 @@ def check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> tu
             a, b = per_item(pr, mid), per_item(base, mid)
             keys = sorted(set(a) & set(b))
             d, lo, hi = stats.paired_bootstrap([a[k] for k in keys], [b[k] for k in keys],
-                                               n_resamples=bs.get("n_resamples", 1000), rng=bs.get("rng", 2027))
+                                               n_resamples=bs.get("n_resamples", 1000), rng=bs.get("rng", 2027),
+                                               confidence=bs.get("confidence", 0.95))
             note = f"Δ {d:+.3f} CI [{lo:+.3f}, {hi:+.3f}]"
             if hi < 0:
                 verdict = "fail"
@@ -194,6 +199,27 @@ def check(pr: dict, base: dict, spec: dict, base_spec: dict | None = None) -> tu
         sb, sl = slice_check(pr, base, spec)
         blocked += sb
         lines += sl
+    rb, rl = row_regression_check(pr, base, spec)
+    return blocked + rb, lines + rl
+
+
+def row_regression_check(pr: dict, base: dict, spec: dict) -> tuple[list[str], list[str]]:
+    """Per-(item, seed) diff: count trials that pass on the baseline but fail in the PR.
+    Means cannot see a regression that moves a failure from one seed to another of the same item
+    (baseline fails E-002@55, PR fixes @55 but breaks @33). Tolerance comes from the A/A run."""
+    blocked, lines = [], []
+    for rr in spec.get("row_regression") or []:
+        metric, cap = rr["metric"], rr.get("max_new_failures", 0)
+        was = {(r["item_id"], r["seed"]): r.get(metric) for r in base.get("rows") or []}
+        new = sorted(f"{r['item_id']}@{r['seed']}" for r in pr.get("rows") or []
+                     if r.get(metric) is False and was.get((r["item_id"], r["seed"])) is True)
+        rid = f"rows:{metric}"
+        bad = len(new) > cap
+        if bad and rr.get("blocking"):
+            blocked.append(rid)
+        label = ("BLOCK" if rr.get("blocking") else "warn") if bad else "ok"
+        note = f"new failures {', '.join(new[:4])}{' …' if len(new) > 4 else ''}" if new else ""
+        lines.append(f"  {rid:<22} {len(new)!s:<8} {json.dumps({'max_new_failures': cap}):<40} {note:<28} {label}")
     return blocked, lines
 
 

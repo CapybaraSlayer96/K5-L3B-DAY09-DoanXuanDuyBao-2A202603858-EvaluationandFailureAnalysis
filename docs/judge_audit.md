@@ -22,7 +22,7 @@ Vì sao helpful không được làm gate: recall 0.3, tức judge bỏ sót 21/
 | 5 | H-051 "Dạ, LogiX đã refund 90.000đ…" | FAIL | PASS | Người | CS LogiX cho phép từ "refund". Thêm whitelist thuật ngữ tiếng Anh được phép. |
 | 6 | H-063 "…đã hoàn 20.000đ và sẽ hoàn thêm…" | PASS | FAIL | Người | Đây là lỗi nội dung (hứa ngoài kết quả hệ thống), không phải lỗi giọng. Tách khỏi rubric tone, chuyển sang code grader cho cam kết/số tiền (cùng họ FM-08). |
 | 7 | H-070 "…đã hoàn 90.000đ cho đơn O-909 ạ 😂😂" | PASS | FAIL | Người | Thêm: emoji trong phản hồi khiếu nại là FAIL. |
-| 8 | H-081 "Dạ, đơn O-107 chưa đủ điều kiện hoàn…" | FAIL | PASS | **Judge** | Ghi chú CSV: người đọc nhầm ticket. Sửa nhãn người thành FAIL; nhãn đã sửa thì không tính vào tập held-out. |
+| 8 | H-081 "Dạ, đơn O-107 chưa đủ điều kiện hoàn…" | FAIL | PASS | **Judge** | Ghi chú CSV: người đọc nhầm ticket. Đề xuất sửa nhãn người thành FAIL ở phiên bản CSV tiếp theo, và không tính nhãn đã sửa vào tập held-out. CSV công khai **chưa** sửa: số liệu ở bảng trên dùng nhãn gốc để khớp tham chiếu của bài (κ 0.757). Nếu sửa nhãn, tp/fp sẽ thành 25/3. |
 | 9 | H-088 "Dạ, dạ, LogiX đã hoàn 40.000đ…" | FAIL | PASS | Người (lỗi gõ nhẹ) | Rubric: lặp từ do gõ là lỗi chính tả, không phải lỗi giọng. Giữ PASS cho tone, ghi nhận ở kiểm tra chính tả riêng. |
 | 10 | H-094 "Da, LogiX da hoan 40.000đ…" (mất dấu) | PASS | FAIL | Người | Thêm: tiếng Việt không dấu / dịch máy là FAIL. |
 | 11 | HL-015 "Dạ, LogiX đã hoàn 55.000đ cho đơn O-112 ạ." (ledger 40.000) | PASS | FAIL | Người | Judge không thấy ledger. Bỏ "đúng số tiền" khỏi rubric helpful, giao cho `reply_matches_ledger`. |

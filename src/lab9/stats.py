@@ -99,6 +99,8 @@ def _check_nck(n: int, c: int, k: int) -> tuple[int, int, int]:
     """Coerce to int; raise ValueError on non-integers or unless 0 <= c <= n and 1 <= k <= n."""
     import operator
 
+    if any(isinstance(v, bool) for v in (n, c, k)):
+        raise ValueError(f"n, c, k must be integers, not bool: {(n, c, k)!r}")
     try:
         n, c, k = (operator.index(v) for v in (n, c, k))
     except TypeError as e:

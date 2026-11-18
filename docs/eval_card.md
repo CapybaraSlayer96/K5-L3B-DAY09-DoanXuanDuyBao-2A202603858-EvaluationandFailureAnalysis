@@ -17,6 +17,7 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi s�
 | db_fact_kept | năng lực, bước | code (event `model_override`) | ≥ 0.95 | không |
 | host_policy_decision | năng lực, trajectory | code (nhãn policy_denied ⇔ host ghi policy_denied) | ≥ 0.95 | không |
 | pass_5, cost_per_success | theo dõi | summarize | ≥ 0.80 · tăng ≤ 10% | không |
+| rows:pass_rate | hồi quy theo dòng | gate: (item, seed) pass trên baseline mà fail trên PR | ≤ 0 dòng | có |
 
 - **Kết quả baseline vs PR (v1, gate `python -m lab9.gate`):**
 
@@ -24,7 +25,7 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi s�
 |---|---|---|---|---|---|---|---|
 | baseline `swarm` | E-swarm-20261118-6810 | 0.9857 | 0.9857 | 1.0 | 0.9857 | 0.9286 | — |
 | `fixed` | E-fixed-20261118-6810 | 1.0 (Δ +0.014 CI [+0.000, +0.043]) | 1.0 | 1.0 | 1.0 | 1.0 | **exit 0 — merge** |
-| `seeded_regression` | E-seeded_regression-20261118-6810 | 0.7143 (Δ −0.271 CI [−0.500, −0.057]) | 0.8571 (Δ −0.129 CI [−0.315, +0.000]) | 0.7857 (Δ −0.214 CI [−0.429, +0.000]) | 0.9286 | 0.7143 | **exit 1 — blocked: refund_amount_correct, pass_rate, reply_matches_ledger** |
+| `seeded_regression` | E-seeded_regression-20261118-6810 | 0.7143 (Δ −0.271 CI [−0.500, −0.057]) | 0.8571 (Δ −0.129 CI [−0.315, +0.000]) | 0.7857 (Δ −0.214 CI [−0.429, +0.000]) | 0.9286 | 0.7143 | **exit 1 — blocked: refund_amount_correct, pass_rate, reply_matches_ledger, rows:pass_rate** (19 trial mới fail) |
 
   CI = paired bootstrap 95% (scipy, percentile, 1000 resample, rng 2027) trên trung bình theo item. `pass_rate` khớp số tham chiếu trong CHECKPOINTS (Δ −0.271, CI [−0.500, −0.057]).
   Graders (M3, `python -m lab9.mutation --detect`): phát hiện 100% (20/20) dòng `seeded_regression` fail `pass_rate` qua ít nhất một grader khác, báo nhầm 0% trên `fixed`.
@@ -39,7 +40,7 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi s�
   - Không đo trên người dùng thật.
   - Trace không ghi kết quả của host `issue_refund` thành event, nên phải đọc ledger.
   - `reply_matches_ledger` chỉ hiểu mẫu "đã hoàn/đã refund + số + đ" tiếng Việt.
-- **Khi nào tăng eval-set version:** khi thêm/bớt item (ví dụ thêm item từ trace case mới) hoặc đổi nhãn (như H-081 trong audit), hoặc khi đổi nguồn claim. Tăng version thì phải chạy lại baseline. Cùng version thì ngưỡng chỉ được chặt hơn (ratchet, gate kiểm bằng `--base-spec`).
+- **Khi nào tăng eval-set version:** khi thêm/bớt item (ví dụ thêm item từ trace case mới) hoặc đổi nhãn (như H-081 trong audit), hoặc khi đổi nguồn claim. Tăng version thì phải chạy lại baseline. Cùng version thì ngưỡng chỉ được chặt hơn. Gate kiểm ratchet khi được truyền `--base-spec`, và coi là cùng version nếu trùng `eval_set_version` **hoặc** trùng đường dẫn `eval_set`, nên đổi tên version không né được. Workflow CI hiện **không** truyền `--base-spec`, vì vậy reviewer phải chạy `python -m lab9.gate … --base-spec <spec trên main>` khi PR đụng tới `config/metric_spec*.yaml`.
 
 ## v2 (M5–M7): slice, pass^k, chống gian lận eval
 
@@ -56,6 +57,7 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi s�
 | `seeded_regression` | 0.6429 | mọi metric capability + 4 slice | |
 | FM-08 kiểu `misreport + rare` (thử nội bộ) | 1.0 | `reply_matches_ledger` 0.9571 < 0.98, `slice:money_movement/reply_matches_ledger` 0.9 < 0.95 | grader Lab 8 PASS hết; chỉ metric FM-08 bắt |
 | `quiet_override` (FM-03 không để lại event, thử nội bộ) | 0.8929 (trên sàn) | `refund_amount_correct` CI, `slice:adversarial/pass_rate` 0.857, `slice:denial/pass_rate` 0.727 | `db_fact_kept` = 1.0 vì không có event, nên gate phải dựa vào outcome và slice |
+| `quiet_override` / `ticket_trust` / `sum_parts` / `stale_clause` + `rare` (thử nội bộ) | 0.9786 = baseline | chỉ `rows:pass_rate` (3 trial mới fail ở seed 33) | 3 trial fail ở seed 55 của baseline (E-002, E-101, E-102) được sửa, còn 3 trial mới fail ở seed 33. Với `quiet_override` và `ticket_trust`, trial mới rơi vào **cùng** item, nên trung bình theo item không đổi. Với `sum_parts` (E-014, E-105, E-106) và `stale_clause` (E-006, E-103, E-104), trial mới ở item khác: Δ tổng = 0 và CI chạm 0. Chỉ phép so từng (item, seed) thấy được. |
 | `fixed`, `honest_refactor` | 1.0 | — merge | honest_refactor chỉ có warn `cost_per_success` (non-blocking) |
 
   Scorecard `python -m lab9.mutation --spec config/metric_spec_v2.yaml --baseline reports/baseline_v2.json`: **mutation score 3/3 · false alarms 0**.
@@ -68,7 +70,12 @@ Card này đi kèm mỗi báo cáo và được dùng lại ở Day 10. Mọi s�
   - giá trị dòng của metric có grader bị thiếu hoặc không phải bool;
   - metric trong report khác giá trị tính lại từ chính các dòng;
   - slice tag của item khác baseline;
-  - ratchet: spec nới so với `--base-spec` cùng eval-set version.
+  - ratchet: spec nới so với `--base-spec` cùng eval-set version (hoặc cùng file eval_set), gồm cả `row_regression`.
+
+  Ngoài integrity, `row_regression` (blocking, cả v1 và v2) chặn PR nếu có trial pass trên baseline mà fail trên PR, so theo đúng (item, seed). Tolerance = 0 vì A/A trên MockLLM không làm đổi dòng nào; với LLM thật phải nới tolerance theo dải A/A.
+  Giới hạn còn lại:
+  - `eval_set_sha` chỉ băm file item, không băm `labels_*.json`, nên sửa nhãn không đổi sha. Gate chỉ phát hiện gián tiếp, khi metric tính lại khác đi.
+  - Một report bịa mà dòng và metric khớp nhau thì không phát hiện được nếu không chạy lại. CI giảm rủi ro này bằng cách tự chạy lại `swarm` rồi so với baseline (`lab9.ci_check`).
 
   `python -m lab9.traps …` chặn 4/4 trap công khai. Thử thêm nội bộ, cũng bị chặn: dòng trùng giữ nguyên số dòng, evaluator_failures trên baseline xanh, sửa tay metric, đổi slice tag, metric = inf, lật dòng fail thành pass nhưng giữ metric cũ.
 - **Giới hạn cỡ mẫu:** bug `rare` bật khi seed chia hết cho 3, tức xảy ra ở 1/3 số lần chạy. Trong bộ seed {11, 22, 33, 44, 55} nó chỉ rơi vào **một** seed (33). Gate bắt được `flaky_regression` chỉ vì seed 33 tình cờ nằm trong bộ seed: với {11, 22, 44, 55, 77} thì bug không bật lần nào và lọt hoàn toàn.

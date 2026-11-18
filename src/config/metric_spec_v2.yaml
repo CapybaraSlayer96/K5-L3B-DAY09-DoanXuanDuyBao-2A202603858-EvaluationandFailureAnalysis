@@ -31,3 +31,7 @@ slices:
   - {name: money_movement, metric: reply_matches_ledger, min: 0.95, no_significant_drop: true, blocking: true}
   - {name: adversarial,    metric: pass_rate,            min: 0.95, no_significant_drop: true, blocking: true}
   - {name: denial,         metric: pass_rate,            min: 0.90, no_significant_drop: true, blocking: true}
+# Trials that pass on the baseline and fail in the PR (same item, same seed). A/A on MockLLM moves 0
+# rows, so tolerance 0: a PR that trades one failing seed for another is still a regression.
+row_regression:
+  - {metric: pass_rate, max_new_failures: 0, blocking: true}

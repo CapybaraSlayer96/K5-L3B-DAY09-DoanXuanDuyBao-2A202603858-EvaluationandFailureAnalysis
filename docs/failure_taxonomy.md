@@ -1,7 +1,7 @@
 # Failure taxonomy v1
 
 Nguồn bằng chứng: trace sinh lại bằng `python -m lab9.trace_case --shape <shape> --claim <claim> --seed <seed>` (chạy trong `src/`).
-Ngoài các shape công khai (`swarm`, `fixed`, `seeded_regression`, …), các trace `bug_<switch>` là shape `fixed` bật thêm **một** công tắc lỗi trong `lab9/variant_agent.BUGS`. Shape này chỉ đăng ký trong bộ nhớ, từ script nằm ngoài repo; không file nào trong `lab8/` hay `lab9/variants.py` bị sửa.
+Ngoài các shape công khai (`swarm`, `fixed`, `seeded_regression`, …), các trace `bug_<switch>` là shape `fixed` bật thêm **một** công tắc lỗi trong `lab9/variant_agent.BUGS`. `lab9.trace_case` tự đăng ký shape này trong bộ nhớ (ví dụ `--shape bug_misreport`); không file nào trong `lab8/` hay `lab9/variants.py` bị sửa. Trace của claim v2 (C-1xx) cần thêm `--spec config/metric_spec_v2.yaml`.
 Số "event" là thứ tự in ra bởi `lab9.trace_case` (bắt đầu từ 1).
 
 | ID | Tên | Định nghĩa (1 câu) | Layer | Bằng chứng (claim@seed / trace) | Grader | Metric |

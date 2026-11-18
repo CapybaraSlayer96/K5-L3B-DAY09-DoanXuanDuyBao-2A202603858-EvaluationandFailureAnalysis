@@ -24,6 +24,7 @@
 | db_fact_kept | năng lực (mức bước) | ≥ 0.95 | không (cảnh báo) | 0.9857 |
 | host_policy_decision | năng lực (trajectory) | ≥ 0.95 | không (cảnh báo) | 1.0 |
 | pass_5, cost_per_success | theo dõi | ≥ 0.80 · tăng ≤ 10% | không | 0.9286 · 49.567 |
+| rows:pass_rate | hồi quy theo dòng | ≤ 0 trial mới fail so với baseline | có | 0 |
 | reply_matches_ledger (FM-08) | năng lực (outcome) | ≥ 0.95 và không giảm có ý nghĩa | có | 1.0 |
 
 "Giảm có ý nghĩa" = CI 95% paired bootstrap của Δ (PR − baseline) nằm hoàn toàn dưới 0.
@@ -53,7 +54,9 @@ Quy tắc: tiền và phê duyệt luôn chấm bằng code. Judge chỉ dùng c
 ## 5. Cổng release
 - Lệnh: `python -m lab9.gate --pr reports/eval_<shape>.json --baseline reports/baseline_v1.json` (v2: thêm `--spec config/metric_spec_v2.yaml --baseline reports/baseline_v2.json`, và `--base-spec <spec trên main>` để kiểm ratchet).
 - Baseline lấy từ nhánh được bảo vệ, phủ đủ `item × seed`. eval_set_sha của PR phải trùng baseline. `lab9.ci_check` xác nhận baseline là `swarm` và trùng metric với lần chạy của CI.
-- Integrity: gate từ chối report có NaN/inf, mất/trùng dòng, seed chọn lọc, evaluator lỗi, metric không khớp dòng, slice tag bị đổi, hoặc spec bị nới.
+- Integrity: gate từ chối report có NaN/inf, mất/trùng dòng, seed chọn lọc, evaluator lỗi, metric không khớp dòng, slice tag bị đổi, hoặc spec bị nới (khi có `--base-spec`).
+- `row_regression`: không trial (item, seed) nào được chuyển từ pass trên baseline sang fail trên PR. Kiểm này bắt được trường hợp lỗi chuyển sang seed khác mà trung bình vẫn giữ nguyên.
+- CI chưa truyền `--base-spec`. PR sửa `config/metric_spec*.yaml` phải được eval owner chạy gate với spec của `main` trước khi merge.
 - Bằng chứng hiện tại: `fixed` → exit 0. `seeded_regression` → exit 1, `pass_rate` Δ −0.271 CI [−0.500, −0.057]. Scorecard v2 3/3, 0 báo nhầm. 4/4 trap công khai bị chặn.
 - Gate exit 1 → **không merge**. Người xử lý: tác giả PR sửa agent. Eval owner (Đoàn Xuân Duy Bảo) xem xét khi nghi gate báo nhầm. Ngoại lệ (waiver) cần eval owner duyệt, ghi lý do và run ID vào PR. Waiver không được kèm sửa ngưỡng trên cùng eval-set version.
 
